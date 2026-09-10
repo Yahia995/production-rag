@@ -1,8 +1,8 @@
 from abc import ABC, abstractmethod
+from datetime import datetime, timezone
 from hashlib import sha256
 from pathlib import Path
 from uuid import uuid4
-from datetime import datetime, timezone
 
 from app.documents.models import DocumentMetadata, ParsedDocument
 
@@ -44,3 +44,43 @@ class TxtParser(DocumentParser):
     def _normalize(content: str) -> str:
         content = content.replace("\r\n", "\n").replace("\r", "\n")
         return content.strip()
+
+
+class MarkdownParser(DocumentParser):
+    """Parser for Markdown documents."""
+
+    def parse(self, path: Path) -> ParsedDocument:
+        content = path.read_text(encoding="utf-8")
+        content = self._normalize(content)
+
+        metadata = DocumentMetadata(
+            source=str(path),
+            title=self._extract_title(content, path),
+            document_type="markdown",
+            collection="default",
+        )
+
+        content_hash = sha256(content.encode("utf-8")).hexdigest()
+
+        return ParsedDocument(
+            document_id=uuid4(),
+            content=content,
+            metadata=metadata,
+            content_hash=content_hash,
+            parsed_at=datetime.now(timezone.utc),
+        )
+
+    @staticmethod
+    def _normalize(content: str) -> str:
+        content = content.replace("\r\n", "\n").replace("\r", "\n")
+        return content.strip()
+
+    @staticmethod
+    def _extract_title(content: str, path: Path) -> str:
+        for line in content.splitlines():
+            stripped = line.strip()
+
+            if stripped.startswith("# "):
+                return stripped[2:].strip()
+
+        return path.stem
