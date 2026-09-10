@@ -7,7 +7,7 @@ class Settings(BaseSettings):
     app_env: str = "development"
     app_name: str = "production-rag"
 
-    database_url: str = ""
+    database_url: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/production_rag"
     qdrant_url: str = ""
     redis_url: str = ""
 
