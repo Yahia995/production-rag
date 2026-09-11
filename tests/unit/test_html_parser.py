@@ -8,23 +8,22 @@ def test_html_parser_extracts_readable_content(tmp_path: Path) -> None:
     path = tmp_path / "python.html"
 
     path.write_text(
-        """<!doctype html>
-<html>
-<head>
-    <title>Python Documentation</title>
-    <style>body { color: red; }</style>
-</head>
-<body>
-    <nav>Navigation</nav>
-    <main>
-        <h1>Python</h1>
-        <p>Python is a programming language.</p>
-        <script>alert("ignore");</script>
-        <p>It has a large standard library.</p>
-    </main>
-</body>
-</html>
-""",
+        "<!doctype html>\n"
+        "<html>\n"
+        "<head>\n"
+        "    <title>Python Documentation</title>\n"
+        "    <style>body { color: red; }</style>\n"
+        "</head>\n"
+        "<body>\n"
+        "    <nav>Navigation</nav>\n"
+        "    <main>\n"
+        "        <h1>Python</h1>\n"
+        "        <p>Python is a programming language.</p>\n"
+        "        <script>alert(\"ignore\");</script>\n"
+        "        <p>It has a large standard library.</p>\n"
+        "    </main>\n"
+        "</body>\n"
+        "</html>\n",
         encoding="utf-8",
     )
 
@@ -38,20 +37,20 @@ def test_html_parser_extracts_readable_content(tmp_path: Path) -> None:
         "Python is a programming language.\n"
         "It has a large standard library."
     )
+    assert len(document.segments) == 1
+    assert document.segments[0].content == document.content
 
 
 def test_html_parser_falls_back_to_h1_for_title(tmp_path: Path) -> None:
     path = tmp_path / "python.html"
 
     path.write_text(
-        """
-        <html>
-            <body>
-                <h1>Python Guide</h1>
-                <p>Introduction.</p>
-            </body>
-        </html>
-        """,
+        "<html>\n"
+        "    <body>\n"
+        "        <h1>Python Guide</h1>\n"
+        "        <p>Introduction.</p>\n"
+        "    </body>\n"
+        "</html>\n",
         encoding="utf-8",
     )
 

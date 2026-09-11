@@ -15,9 +15,17 @@ class DocumentMetadata:
 
 
 @dataclass(frozen=True, slots=True)
+class ParsedSegment:
+    content: str
+    page_number: int | None = None
+    section: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
 class ParsedDocument:
     document_id: UUID
     content: str
     metadata: DocumentMetadata
     content_hash: str
     parsed_at: datetime
+    segments: tuple[ParsedSegment, ...] = ()

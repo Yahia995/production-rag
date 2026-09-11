@@ -7,7 +7,7 @@ from uuid import uuid4
 from bs4 import BeautifulSoup
 from pypdf import PdfReader
 
-from app.documents.models import DocumentMetadata, ParsedDocument
+from app.documents.models import DocumentMetadata, ParsedDocument, ParsedSegment
 
 
 class DocumentParser(ABC):
@@ -41,6 +41,7 @@ class TxtParser(DocumentParser):
             metadata=metadata,
             content_hash=content_hash,
             parsed_at=datetime.now(timezone.utc),
+            segments=(ParsedSegment(content=content),),
         )
 
     @staticmethod
@@ -71,6 +72,7 @@ class MarkdownParser(DocumentParser):
             metadata=metadata,
             content_hash=content_hash,
             parsed_at=datetime.now(timezone.utc),
+            segments=(ParsedSegment(content=content),),
         )
 
     @staticmethod
@@ -118,6 +120,7 @@ class HtmlParser(DocumentParser):
             metadata=metadata,
             content_hash=content_hash,
             parsed_at=datetime.now(timezone.utc),
+            segments=(ParsedSegment(content=content),),
         )
 
     @staticmethod
@@ -153,15 +156,23 @@ class PdfParser(DocumentParser):
         reader = PdfReader(str(path))
 
         pages: list[str] = []
+        segments: list[ParsedSegment] = []
 
-        for page in reader.pages:
+        for page_number, page in enumerate(reader.pages, start=1):
             text = page.extract_text() or ""
             text = self._normalize_page(text)
 
-            if text:
-                pages.append(text)
+            pages.append(text)
 
-        content = "\n\n".join(pages)
+            if text:
+                segments.append(
+                    ParsedSegment(
+                        content=text,
+                        page_number=page_number,
+                    )
+                )
+
+        content = "\n\n".join(page for page in pages if page)
 
         metadata = DocumentMetadata(
             source=str(path),
@@ -178,6 +189,7 @@ class PdfParser(DocumentParser):
             metadata=metadata,
             content_hash=content_hash,
             parsed_at=datetime.now(timezone.utc),
+            segments=tuple(segments),
         )
 
     @staticmethod

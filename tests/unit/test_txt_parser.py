@@ -18,6 +18,9 @@ def test_txt_parser_reads_and_normalizes_content(tmp_path: Path) -> None:
     assert document.metadata.title == "python-guide"
     assert document.metadata.document_type == "txt"
     assert document.metadata.collection == "default"
+    assert len(document.segments) == 1
+    assert document.segments[0].content == document.content
+    assert document.segments[0].page_number is None
 
 
 def test_txt_parser_generates_content_hash(tmp_path: Path) -> None:

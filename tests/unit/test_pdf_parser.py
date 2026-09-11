@@ -38,6 +38,19 @@ def test_pdf_parser_returns_empty_content_for_blank_pdf(
 
     assert document.content == ""
     assert document.content_hash == sha256(b"").hexdigest()
+    assert document.segments == ()
+
+
+def test_pdf_parser_skips_pages_without_extractable_text(
+    tmp_path: Path,
+) -> None:
+    path = tmp_path / "example.pdf"
+
+    _create_pdf(path)
+
+    document = PdfParser().parse(path)
+
+    assert document.segments == ()
 
 
 def test_created_pdf_can_be_read_by_pypdf(tmp_path: Path) -> None:
