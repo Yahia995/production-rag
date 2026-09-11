@@ -5,6 +5,7 @@ from pathlib import Path
 from uuid import uuid4
 
 from bs4 import BeautifulSoup
+from pypdf import PdfReader
 
 from app.documents.models import DocumentMetadata, ParsedDocument
 
@@ -143,3 +144,59 @@ class HtmlParser(DocumentParser):
         lines = [line for line in lines if line]
 
         return "\n".join(lines)
+
+
+class PdfParser(DocumentParser):
+    """Parser for text-based PDF documents."""
+
+    def parse(self, path: Path) -> ParsedDocument:
+        reader = PdfReader(str(path))
+
+        pages: list[str] = []
+
+        for page in reader.pages:
+            text = page.extract_text() or ""
+            text = self._normalize_page(text)
+
+            if text:
+                pages.append(text)
+
+        content = "\n\n".join(pages)
+
+        metadata = DocumentMetadata(
+            source=str(path),
+            title=self._extract_title(reader, path),
+            document_type="pdf",
+            collection="default",
+        )
+
+        content_hash = sha256(content.encode("utf-8")).hexdigest()
+
+        return ParsedDocument(
+            document_id=uuid4(),
+            content=content,
+            metadata=metadata,
+            content_hash=content_hash,
+            parsed_at=datetime.now(timezone.utc),
+        )
+
+    @staticmethod
+    def _normalize_page(content: str) -> str:
+        content = content.replace("\r\n", "\n").replace("\r", "\n")
+
+        lines = [line.strip() for line in content.splitlines()]
+        lines = [line for line in lines if line]
+
+        return "\n".join(lines)
+
+    @staticmethod
+    def _extract_title(reader: PdfReader, path: Path) -> str:
+        metadata = reader.metadata
+
+        if metadata is not None and metadata.title:
+            title = str(metadata.title).strip()
+
+            if title:
+                return title
+
+        return path.stem
