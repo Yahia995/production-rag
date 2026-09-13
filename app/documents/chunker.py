@@ -41,7 +41,7 @@ class DocumentChunker(ABC):
 
 
 class CharacterChunker(DocumentChunker):
-    """Deterministic character-based chunker with overlap."""
+    """Paragraph-aware chunker with a character-based fallback."""
 
     def __init__(self, config: ChunkingConfig | None = None) -> None:
         self.config = config or ChunkingConfig()
@@ -74,26 +74,92 @@ class CharacterChunker(DocumentChunker):
         if not content:
             return ()
 
-        if len(content) <= self.config.chunk_size:
-            return (content,)
+        paragraphs = self._split_paragraphs(content)
 
+        chunks: list[str] = []
+        current_parts: list[str] = []
+        current_length = 0
+
+        for paragraph in paragraphs:
+            if len(paragraph) > self.config.chunk_size:
+                if current_parts:
+                    chunks.append("\n\n".join(current_parts))
+                    current_parts = []
+                    current_length = 0
+
+                chunks.extend(self._split_long_paragraph(paragraph))
+                continue
+
+            separator_length = 2 if current_parts else 0
+            proposed_length = current_length + separator_length + len(paragraph)
+
+            if (
+                current_parts
+                and proposed_length > self.config.chunk_size
+            ):
+                chunks.append("\n\n".join(current_parts))
+
+                overlap = self._build_overlap(current_parts)
+                current_parts = [overlap, paragraph] if overlap else [paragraph]
+                current_length = sum(len(part) for part in current_parts)
+
+                if overlap:
+                    current_length += 2
+            else:
+                current_parts.append(paragraph)
+                current_length = proposed_length
+
+        if current_parts:
+            chunks.append("\n\n".join(current_parts))
+
+        return tuple(chunks)
+
+    @staticmethod
+    def _split_paragraphs(content: str) -> list[str]:
+        paragraphs = [
+            paragraph.strip()
+            for paragraph in content.split("\n\n")
+        ]
+
+        return [paragraph for paragraph in paragraphs if paragraph]
+
+    def _split_long_paragraph(self, paragraph: str) -> tuple[str, ...]:
         chunks: list[str] = []
         start = 0
 
-        while start < len(content):
+        while start < len(paragraph):
             end = min(
                 start + self.config.chunk_size,
-                len(content),
+                len(paragraph),
             )
 
-            chunk = content[start:end].strip()
+            chunk = paragraph[start:end].strip()
 
             if chunk:
                 chunks.append(chunk)
 
-            if end >= len(content):
+            if end >= len(paragraph):
                 break
 
             start = end - self.config.chunk_overlap
 
         return tuple(chunks)
+
+    def _build_overlap(self, parts: list[str]) -> str:
+        if self.config.chunk_overlap == 0:
+            return ""
+
+        overlap_parts: list[str] = []
+        length = 0
+
+        for part in reversed(parts):
+            separator_length = 2 if overlap_parts else 0
+            proposed_length = length + separator_length + len(part)
+
+            if proposed_length > self.config.chunk_overlap:
+                break
+
+            overlap_parts.insert(0, part)
+            length = proposed_length
+
+        return "\n\n".join(overlap_parts)

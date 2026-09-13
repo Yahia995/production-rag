@@ -82,7 +82,28 @@ def test_small_document_produces_one_chunk() -> None:
     assert chunks[0].document_id == document.document_id
 
 
-def test_large_document_is_split_into_overlapping_chunks() -> None:
+def test_paragraphs_are_kept_together_when_they_fit() -> None:
+    document = _document(
+        "Python is a programming language.\n\n"
+        "It has a large standard library.\n\n"
+        "Asyncio provides asynchronous programming."
+    )
+
+    chunks = CharacterChunker(
+        ChunkingConfig(
+            chunk_size=100,
+            chunk_overlap=0,
+        ),
+    ).chunk(document)
+
+    assert [chunk.content for chunk in chunks] == [
+        "Python is a programming language.\n\n"
+        "It has a large standard library.",
+        "Asyncio provides asynchronous programming.",
+    ]
+
+
+def test_large_paragraph_uses_character_fallback() -> None:
     document = _document("abcdefghij")
 
     chunks = CharacterChunker(
@@ -99,13 +120,77 @@ def test_large_document_is_split_into_overlapping_chunks() -> None:
     ]
 
 
-def test_chunk_indexes_are_sequential() -> None:
-    document = _document("abcdefghij")
+def test_paragraph_boundary_is_used_before_character_fallback() -> None:
+    document = _document(
+        "First paragraph.\n\n"
+        "Second paragraph."
+    )
 
     chunks = CharacterChunker(
         ChunkingConfig(
-            chunk_size=4,
-            chunk_overlap=1,
+            chunk_size=20,
+            chunk_overlap=0,
+        ),
+    ).chunk(document)
+
+    assert [chunk.content for chunk in chunks] == [
+        "First paragraph.",
+        "Second paragraph.",
+    ]
+
+
+def test_paragraph_overlap_preserves_previous_context() -> None:
+    document = _document(
+        "First paragraph.\n\n"
+        "Second paragraph.\n\n"
+        "Third paragraph."
+    )
+
+    chunks = CharacterChunker(
+        ChunkingConfig(
+            chunk_size=35,
+            chunk_overlap=20,
+        ),
+    ).chunk(document)
+
+    assert chunks[0].content == (
+        "First paragraph.\n\nSecond paragraph."
+    )
+    assert chunks[1].content == (
+        "Second paragraph.\n\nThird paragraph."
+    )
+
+
+def test_zero_overlap_does_not_repeat_previous_paragraph() -> None:
+    document = _document(
+        "First paragraph.\n\n"
+        "Second paragraph."
+    )
+
+    chunks = CharacterChunker(
+        ChunkingConfig(
+            chunk_size=20,
+            chunk_overlap=0,
+        ),
+    ).chunk(document)
+
+    assert [chunk.content for chunk in chunks] == [
+        "First paragraph.",
+        "Second paragraph.",
+    ]
+
+
+def test_chunk_indexes_are_sequential() -> None:
+    document = _document(
+        "First paragraph.\n\n"
+        "Second paragraph.\n\n"
+        "Third paragraph."
+    )
+
+    chunks = CharacterChunker(
+        ChunkingConfig(
+            chunk_size=20,
+            chunk_overlap=0,
         ),
     ).chunk(document)
 
