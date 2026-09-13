@@ -39,3 +39,5 @@ logs/
 *.key
 
 .ipynb_checkpoints/
+
+production_rag_platform_spec.md
