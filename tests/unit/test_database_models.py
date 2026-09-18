@@ -1,4 +1,4 @@
-from app.db.models import Base, Document, DocumentVersion
+from app.db.models import Base, Document, DocumentVersion, Chunk, Collection
 
 
 def test_document_table_name() -> None:
@@ -51,3 +51,34 @@ def test_models_are_registered_with_base() -> None:
 
     assert "documents" in tables
     assert "document_versions" in tables
+
+def test_collection_table_name() -> None:
+    assert Collection.__tablename__ == "collections"
+
+
+def test_chunk_table_name() -> None:
+    assert Chunk.__tablename__ == "chunks"
+
+
+def test_chunk_columns() -> None:
+    columns = set(Chunk.__table__.columns.keys())
+
+    assert columns == {
+        "id",
+        "document_version_id",
+        "chunk_index",
+        "content",
+        "page_number",
+        "section",
+        "created_at",
+    }
+
+
+def test_chunk_has_document_version_foreign_key() -> None:
+    foreign_keys = Chunk.__table__.c.document_version_id.foreign_keys
+
+    assert len(foreign_keys) == 1
+
+    foreign_key = next(iter(foreign_keys))
+
+    assert foreign_key.target_fullname == "document_versions.id"
