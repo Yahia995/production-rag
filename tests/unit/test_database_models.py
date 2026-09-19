@@ -1,4 +1,4 @@
-from app.db.models import Base, Document, DocumentVersion, Chunk, Collection
+from app.db.models import Base, Document, DocumentVersion, Chunk, Collection, Conversation, Message
 
 
 def test_document_table_name() -> None:
@@ -82,3 +82,33 @@ def test_chunk_has_document_version_foreign_key() -> None:
     foreign_key = next(iter(foreign_keys))
 
     assert foreign_key.target_fullname == "document_versions.id"
+
+
+def test_conversation_table_name() -> None:
+    assert Conversation.__tablename__ == "conversations"
+
+
+def test_message_table_name() -> None:
+    assert Message.__tablename__ == "messages"
+
+
+def test_message_columns() -> None:
+    columns = set(Message.__table__.columns.keys())
+
+    assert columns == {
+        "id",
+        "conversation_id",
+        "role",
+        "content",
+        "created_at",
+    }
+
+
+def test_message_has_conversation_foreign_key() -> None:
+    foreign_keys = Message.__table__.c.conversation_id.foreign_keys
+
+    assert len(foreign_keys) == 1
+
+    foreign_key = next(iter(foreign_keys))
+
+    assert foreign_key.target_fullname == "conversations.id"
