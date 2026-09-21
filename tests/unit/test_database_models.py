@@ -1,4 +1,4 @@
-from app.db.models import Base, Document, DocumentVersion, Chunk, Collection, Conversation, Message
+from app.db.models import Base, Document, DocumentVersion, Chunk, Collection, Conversation, Message, IngestionJob
 
 
 def test_document_table_name() -> None:
@@ -112,3 +112,25 @@ def test_message_has_conversation_foreign_key() -> None:
     foreign_key = next(iter(foreign_keys))
 
     assert foreign_key.target_fullname == "conversations.id"
+
+
+def test_ingestion_job_table_name() -> None:
+    assert IngestionJob.__tablename__ == "ingestion_jobs"
+
+
+def test_ingestion_job_columns() -> None:
+    columns = set(IngestionJob.__table__.columns.keys())
+
+    assert columns == {
+        "id",
+        "source",
+        "collection",
+        "status",
+        "error_message",
+        "created_at",
+        "updated_at",
+    }
+
+
+def test_ingestion_job_default_status() -> None:
+    assert IngestionJob.__table__.c.status.default.arg == "pending"
