@@ -19,9 +19,7 @@ from app.retrieval.dense import DenseRetriever
 from app.retrieval.sparse import SparseRetriever
 
 
-async def get_db(
-    session: AsyncSession = None,
-) -> AsyncGenerator[AsyncSession, None]:
+async def get_db() -> AsyncGenerator[AsyncSession, None]:
     async for db_session in get_db_session():
         yield db_session
 

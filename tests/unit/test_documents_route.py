@@ -2,8 +2,11 @@ from unittest.mock import MagicMock
 
 from fastapi.testclient import TestClient
 
-from app.api.dependencies import get_ingestion_queue
+from app.api.dependencies import get_ingestion_queue, get_db, get_vector_store
 from app.main import app
+
+from datetime import datetime, timezone
+from uuid import uuid4
 
 client = TestClient(app)
 
