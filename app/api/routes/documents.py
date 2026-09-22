@@ -27,7 +27,7 @@ class IngestionJobResponse(BaseModel):
     status: str
 
 
-@router.post("", response_model=IngestionJobResponse, status_code=202)
+@router.post("", response_model=IngestionJobResponse, status_code=202, dependencies=[Depends(verify_api_key)])
 async def create_document(
     request: CreateDocumentRequest,
     queue: RedisJobQueue = Depends(get_ingestion_queue),
@@ -50,7 +50,7 @@ async def create_document(
     )
 
 
-@router.post("/batch", response_model=list[IngestionJobResponse], status_code=202)
+@router.post("/batch", response_model=list[IngestionJobResponse], status_code=202, dependencies=[Depends(verify_api_key)])
 async def create_documents_batch(
     requests: list[CreateDocumentRequest],
     queue: RedisJobQueue = Depends(get_ingestion_queue),
@@ -93,7 +93,7 @@ class DocumentResponse(BaseModel):
     updated_at: datetime
 
 
-@router.get("", response_model=list[DocumentResponse])
+@router.get("", response_model=list[DocumentResponse], dependencies=[Depends(verify_api_key)])
 async def list_documents(
     collection: str | None = None,
     session: AsyncSession = Depends(get_db),
@@ -104,7 +104,7 @@ async def list_documents(
     return [DocumentResponse.model_validate(document, from_attributes=True) for document in documents]
 
 
-@router.get("/{document_id}", response_model=DocumentResponse)
+@router.get("/{document_id}", response_model=DocumentResponse, dependencies=[Depends(verify_api_key)])
 async def get_document(
     document_id: UUID,
     session: AsyncSession = Depends(get_db),
@@ -118,7 +118,7 @@ async def get_document(
     return DocumentResponse.model_validate(document, from_attributes=True)
 
 
-@router.delete("/{document_id}", status_code=204)
+@router.delete("/{document_id}", status_code=204, dependencies=[Depends(verify_api_key)])
 async def delete_document(
     document_id: UUID,
     session: AsyncSession = Depends(get_db),

@@ -35,7 +35,7 @@ class ChatResponse(BaseModel):
     citations: list[CitationResponse]
 
 
-@router.post("", response_model=ChatResponse)
+@router.post("", response_model=ChatResponse, dependencies=[Depends(verify_api_key)])
 async def chat(
     request: ChatRequest,
     pipeline: RagPipeline = Depends(get_rag_pipeline),

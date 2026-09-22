@@ -17,6 +17,8 @@ class Settings(BaseSettings):
     embedding_model: str = ""
     reranker_model: str = ""
 
+    api_keys: str = ""
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
