@@ -4,6 +4,7 @@ from functools import lru_cache
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import get_settings
+from app.core.queue import RedisJobQueue
 from app.db.postgres import get_db_session
 from app.db.qdrant import QdrantVectorStore
 from app.embeddings.base import EmbeddingProvider
@@ -69,6 +70,11 @@ def get_llm_provider() -> LLMProvider:
     settings = get_settings()
 
     return OllamaProvider(model=settings.llm_model or "llama3")
+
+
+@lru_cache
+def get_ingestion_queue() -> RedisJobQueue:
+    return RedisJobQueue()
 
 
 def get_query_transformer() -> QueryTransformer:
