@@ -2,6 +2,16 @@ from dataclasses import dataclass
 
 from app.retrieval.base import RetrievedChunk
 
+_INJECTION_MARKERS = (
+    "ignore previous instructions",
+    "ignore all previous instructions",
+    "disregard previous instructions",
+    "reveal the system prompt",
+    "reveal your system prompt",
+    "you are now",
+    "new instructions:",
+)
+
 
 @dataclass(frozen=True, slots=True)
 class ContextChunk:
@@ -76,8 +86,19 @@ class ContextBuilder:
     @staticmethod
     def _format_prompt(context_chunks: tuple[ContextChunk, ...]) -> str:
         sections = [
-            f"[{context_chunk.citation_index}] {context_chunk.chunk.content}"
+            f"[{context_chunk.citation_index}] "
+            f"{ContextBuilder._neutralize(context_chunk.chunk.content)}"
             for context_chunk in context_chunks
         ]
 
         return "\n\n".join(sections)
+
+    @staticmethod
+    def _neutralize(content: str) -> str:
+        lowered = content.lower()
+
+        for marker in _INJECTION_MARKERS:
+            if marker in lowered:
+                return content.replace("\n", " ")
+
+        return content
