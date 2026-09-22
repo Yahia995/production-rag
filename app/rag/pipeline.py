@@ -1,5 +1,15 @@
+import time
 from dataclasses import dataclass
 
+from app.core.metrics import (
+    llm_latency_seconds,
+    rag_request_latency_seconds,
+    rag_requests_total,
+    reranker_latency_seconds,
+    retrieval_latency_seconds,
+    retrieval_results_count,
+)
+from app.core.tracing import get_tracer
 from app.generation.base import LLMProvider
 from app.query.transformer import ConversationTurn, QueryTransformer
 from app.rag.citation import Citation, extract_citations
@@ -13,6 +23,8 @@ _ANSWER_SYSTEM_PROMPT = (
     "inline using [n] markers matching the context. If the context does not "
     "contain enough information, say so explicitly instead of guessing."
 )
+
+_tracer = get_tracer(__name__)
 
 
 @dataclass(frozen=True, slots=True)
@@ -50,29 +62,72 @@ class RagPipeline:
         history: tuple[ConversationTurn, ...] = (),
         filters: dict[str, str] | None = None,
     ) -> RagAnswer:
-        search_query = self._transform_query(question, history)
+        rag_requests_total.inc()
 
-        dense_results = self.dense_retriever.retrieve(
-            search_query, top_k=self.retrieval_top_k, filters=filters
-        )
-        sparse_results = self.sparse_retriever.retrieve(
-            search_query, top_k=self.retrieval_top_k, filters=filters
-        )
+        with _tracer.start_as_current_span("rag.answer"):
+            start = time.perf_counter()
 
-        fused = reciprocal_rank_fusion([dense_results, sparse_results])
-        reranked = self.reranker.rerank(search_query, fused, top_n=self.rerank_top_n)
+            search_query = self._transform_query(question, history)
+            fused = self._retrieve(search_query, filters)
+            reranked = self._rerank(search_query, fused)
 
-        context = self.context_builder.build(reranked)
+            context = self.context_builder.build(reranked)
 
-        prompt = self._build_prompt(question, context.prompt_context)
-        generation = self.llm_provider.generate(
-            prompt=prompt,
-            system_prompt=_ANSWER_SYSTEM_PROMPT,
-        )
+            prompt = self._build_prompt(question, context.prompt_context)
+            generation = self._generate(prompt)
 
-        citations = extract_citations(generation.text, context.chunks)
+            citations = extract_citations(generation.text, context.chunks)
 
-        return RagAnswer(text=generation.text, citations=citations)
+            rag_request_latency_seconds.observe(time.perf_counter() - start)
+
+            return RagAnswer(text=generation.text, citations=citations)
+
+    def _retrieve(
+        self,
+        search_query: str,
+        filters: dict[str, str] | None,
+    ) -> tuple:
+        with _tracer.start_as_current_span("rag.retrieve"):
+            start = time.perf_counter()
+
+            dense_results = self.dense_retriever.retrieve(
+                search_query, top_k=self.retrieval_top_k, filters=filters
+            )
+            sparse_results = self.sparse_retriever.retrieve(
+                search_query, top_k=self.retrieval_top_k, filters=filters
+            )
+
+            retrieval_latency_seconds.observe(time.perf_counter() - start)
+
+            fused = reciprocal_rank_fusion([dense_results, sparse_results])
+            retrieval_results_count.observe(len(fused))
+
+            return fused
+
+    def _rerank(self, search_query: str, fused: tuple) -> tuple:
+        with _tracer.start_as_current_span("rag.rerank"):
+            start = time.perf_counter()
+
+            reranked = self.reranker.rerank(
+                search_query, fused, top_n=self.rerank_top_n
+            )
+
+            reranker_latency_seconds.observe(time.perf_counter() - start)
+
+            return reranked
+
+    def _generate(self, prompt: str):
+        with _tracer.start_as_current_span("rag.generate"):
+            start = time.perf_counter()
+
+            generation = self.llm_provider.generate(
+                prompt=prompt,
+                system_prompt=_ANSWER_SYSTEM_PROMPT,
+            )
+
+            llm_latency_seconds.observe(time.perf_counter() - start)
+
+            return generation
 
     def _transform_query(
         self,

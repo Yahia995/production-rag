@@ -5,6 +5,8 @@ from app.generation.base import GenerationResult
 from app.retrieval.base import RetrievedChunk
 from app.rag.pipeline import RagPipeline
 
+from app.core.metrics import rag_requests_total
+
 
 def _chunk(content: str) -> RetrievedChunk:
     return RetrievedChunk(
@@ -113,3 +115,13 @@ def test_pipeline_returns_no_citations_when_answer_has_none() -> None:
     result = pipeline.answer("unrelated question")
 
     assert result.citations == ()
+
+
+def test_pipeline_increments_request_counter() -> None:
+    pipeline, _, _, _, _ = _pipeline()
+
+    before = rag_requests_total._value.get()
+    pipeline.answer("What is connection pooling?")
+    after = rag_requests_total._value.get()
+
+    assert after == before + 1
