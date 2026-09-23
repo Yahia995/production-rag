@@ -1,9 +1,8 @@
-from uuid import UUID
-
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 
 from app.api.dependencies import get_rag_pipeline
+from app.core.security import verify_api_key
 from app.query.transformer import ConversationTurn
 from app.rag.pipeline import RagAnswer, RagPipeline
 
@@ -35,7 +34,11 @@ class ChatResponse(BaseModel):
     citations: list[CitationResponse]
 
 
-@router.post("", response_model=ChatResponse, dependencies=[Depends(verify_api_key)])
+@router.post(
+    "",
+    response_model=ChatResponse,
+    dependencies=[Depends(verify_api_key)],
+)
 async def chat(
     request: ChatRequest,
     pipeline: RagPipeline = Depends(get_rag_pipeline),

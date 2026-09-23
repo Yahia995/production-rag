@@ -1,8 +1,8 @@
 from uuid import uuid4
 
-from app.retrieval.base import RetrievedChunk
-from app.rag.context import ContextChunk
 from app.rag.citation import extract_citations
+from app.rag.context import ContextChunk
+from app.retrieval.base import RetrievedChunk
 
 
 def _context_chunk(index: int, content: str = "example") -> ContextChunk:

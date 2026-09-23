@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from uuid import uuid4
 
 from app.documents.models import DocumentMetadata, ParsedDocument, ParsedSegment
@@ -29,7 +29,7 @@ def test_parsed_segment_defaults() -> None:
 
 def test_parsed_document_contains_normalized_content_and_metadata() -> None:
     document_id = uuid4()
-    parsed_at = datetime.now(timezone.utc)
+    parsed_at = datetime.now(UTC)
 
     metadata = DocumentMetadata(
         source="docs/python.md",

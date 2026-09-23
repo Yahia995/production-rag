@@ -1,4 +1,13 @@
-from app.db.models import Base, Document, DocumentVersion, Chunk, Collection, Conversation, Message, IngestionJob
+from app.db.models import (
+    Base,
+    Chunk,
+    Collection,
+    Conversation,
+    Document,
+    DocumentVersion,
+    IngestionJob,
+    Message,
+)
 
 
 def test_document_table_name() -> None:

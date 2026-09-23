@@ -82,6 +82,6 @@ def test_html_parser_hashes_normalized_content(tmp_path: Path) -> None:
 
     document = HtmlParser().parse(path)
 
-    expected_hash = sha256("Hello".encode("utf-8")).hexdigest()
+    expected_hash = sha256(b"Hello").hexdigest()
 
     assert document.content_hash == expected_hash

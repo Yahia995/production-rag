@@ -1,11 +1,10 @@
 from unittest.mock import MagicMock
 from uuid import uuid4
 
-from app.generation.base import GenerationResult
-from app.retrieval.base import RetrievedChunk
-from app.rag.pipeline import RagPipeline
-
 from app.core.metrics import rag_requests_total
+from app.generation.base import GenerationResult
+from app.rag.pipeline import RagPipeline
+from app.retrieval.base import RetrievedChunk
 
 
 def _chunk(content: str) -> RetrievedChunk:

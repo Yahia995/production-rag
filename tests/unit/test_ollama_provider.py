@@ -1,5 +1,8 @@
 from unittest.mock import MagicMock
 
+import httpx
+import pytest
+
 from app.generation.ollama import OllamaProvider
 
 
@@ -66,22 +69,14 @@ def test_generate_returns_generation_result() -> None:
 def test_generate_raises_on_http_error() -> None:
     client = MagicMock()
     response = MagicMock()
-    response.raise_for_status.side_effect = httpx_error()
-    client.post.return_value = response
-
-    provider = OllamaProvider(model="llama3", client=client)
-
-    import pytest
-
-    with pytest.raises(Exception):
-        provider.generate("question")
-
-
-def httpx_error() -> Exception:
-    import httpx
-
-    return httpx.HTTPStatusError(
+    response.raise_for_status.side_effect = httpx.HTTPStatusError(
         "error",
         request=MagicMock(),
         response=MagicMock(),
     )
+    client.post.return_value = response
+
+    provider = OllamaProvider(model="llama3", client=client)
+
+    with pytest.raises(httpx.HTTPStatusError):
+        provider.generate("question")

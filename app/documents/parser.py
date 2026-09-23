@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from hashlib import sha256
 from pathlib import Path
 from uuid import uuid4
@@ -40,7 +40,7 @@ class TxtParser(DocumentParser):
             content=content,
             metadata=metadata,
             content_hash=content_hash,
-            parsed_at=datetime.now(timezone.utc),
+            parsed_at=datetime.now(UTC),
             segments=(ParsedSegment(content=content),),
         )
 
@@ -71,7 +71,7 @@ class MarkdownParser(DocumentParser):
             content=content,
             metadata=metadata,
             content_hash=content_hash,
-            parsed_at=datetime.now(timezone.utc),
+            parsed_at=datetime.now(UTC),
             segments=(ParsedSegment(content=content),),
         )
 
@@ -119,7 +119,7 @@ class HtmlParser(DocumentParser):
             content=content,
             metadata=metadata,
             content_hash=content_hash,
-            parsed_at=datetime.now(timezone.utc),
+            parsed_at=datetime.now(UTC),
             segments=(ParsedSegment(content=content),),
         )
 
@@ -188,7 +188,7 @@ class PdfParser(DocumentParser):
             content=content,
             metadata=metadata,
             content_hash=content_hash,
-            parsed_at=datetime.now(timezone.utc),
+            parsed_at=datetime.now(UTC),
             segments=tuple(segments),
         )
 

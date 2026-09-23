@@ -6,6 +6,7 @@ from sqlalchemy.dialects.postgresql import UUID as PostgresUUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.models.base import Base
+from app.db.models.documents import DocumentVersion
 
 
 class Collection(Base):
@@ -49,4 +50,4 @@ class Chunk(Base):
         nullable=False,
     )
 
-    document_version: Mapped["DocumentVersion"] = relationship()
+    document_version: Mapped[DocumentVersion] = relationship()

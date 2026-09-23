@@ -1,6 +1,5 @@
 import logging
 from pathlib import Path
-from uuid import UUID
 
 from app.core.queue import IngestionJobMessage, RedisJobQueue
 from app.db.qdrant import QdrantVectorStore, VectorRecord

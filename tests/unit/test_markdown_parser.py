@@ -63,6 +63,6 @@ def test_markdown_parser_hashes_normalized_content(tmp_path: Path) -> None:
 
     document = MarkdownParser().parse(path)
 
-    expected_hash = sha256("# Title".encode("utf-8")).hexdigest()
+    expected_hash = sha256(b"# Title").hexdigest()
 
     assert document.content_hash == expected_hash

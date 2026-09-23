@@ -29,7 +29,7 @@ def test_txt_parser_generates_content_hash(tmp_path: Path) -> None:
 
     document = TxtParser().parse(path)
 
-    expected_hash = sha256("hello world".encode("utf-8")).hexdigest()
+    expected_hash = sha256(b"hello world").hexdigest()
 
     assert document.content_hash == expected_hash
 

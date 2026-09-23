@@ -1,16 +1,15 @@
-from uuid import UUID, uuid4
-
 from datetime import datetime
+from uuid import UUID, uuid4
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.dependencies import get_ingestion_queue, get_db, get_vector_store
+from app.api.dependencies import get_db, get_ingestion_queue, get_vector_store
 from app.core.queue import IngestionJobMessage, RedisJobQueue
+from app.core.security import verify_api_key
 from app.db.qdrant import QdrantVectorStore
 from app.documents.repository import DocumentRepository
-
-from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter(prefix="/documents", tags=["documents"])
 
@@ -27,7 +26,22 @@ class IngestionJobResponse(BaseModel):
     status: str
 
 
-@router.post("", response_model=IngestionJobResponse, status_code=202, dependencies=[Depends(verify_api_key)])
+class DocumentResponse(BaseModel):
+    id: UUID
+    source: str
+    title: str
+    document_type: str
+    collection: str
+    created_at: datetime
+    updated_at: datetime
+
+
+@router.post(
+    "",
+    response_model=IngestionJobResponse,
+    status_code=202,
+    dependencies=[Depends(verify_api_key)],
+)
 async def create_document(
     request: CreateDocumentRequest,
     queue: RedisJobQueue = Depends(get_ingestion_queue),
@@ -50,7 +64,12 @@ async def create_document(
     )
 
 
-@router.post("/batch", response_model=list[IngestionJobResponse], status_code=202, dependencies=[Depends(verify_api_key)])
+@router.post(
+    "/batch",
+    response_model=list[IngestionJobResponse],
+    status_code=202,
+    dependencies=[Depends(verify_api_key)],
+)
 async def create_documents_batch(
     requests: list[CreateDocumentRequest],
     queue: RedisJobQueue = Depends(get_ingestion_queue),
@@ -83,17 +102,11 @@ async def create_documents_batch(
     return responses
 
 
-class DocumentResponse(BaseModel):
-    id: UUID
-    source: str
-    title: str
-    document_type: str
-    collection: str
-    created_at: datetime
-    updated_at: datetime
-
-
-@router.get("", response_model=list[DocumentResponse], dependencies=[Depends(verify_api_key)])
+@router.get(
+    "",
+    response_model=list[DocumentResponse],
+    dependencies=[Depends(verify_api_key)],
+)
 async def list_documents(
     collection: str | None = None,
     session: AsyncSession = Depends(get_db),
@@ -101,10 +114,17 @@ async def list_documents(
     repository = DocumentRepository(session)
     documents = await repository.list_documents(collection=collection)
 
-    return [DocumentResponse.model_validate(document, from_attributes=True) for document in documents]
+    return [
+        DocumentResponse.model_validate(document, from_attributes=True)
+        for document in documents
+    ]
 
 
-@router.get("/{document_id}", response_model=DocumentResponse, dependencies=[Depends(verify_api_key)])
+@router.get(
+    "/{document_id}",
+    response_model=DocumentResponse,
+    dependencies=[Depends(verify_api_key)],
+)
 async def get_document(
     document_id: UUID,
     session: AsyncSession = Depends(get_db),
@@ -118,7 +138,11 @@ async def get_document(
     return DocumentResponse.model_validate(document, from_attributes=True)
 
 
-@router.delete("/{document_id}", status_code=204, dependencies=[Depends(verify_api_key)])
+@router.delete(
+    "/{document_id}",
+    status_code=204,
+    dependencies=[Depends(verify_api_key)],
+)
 async def delete_document(
     document_id: UUID,
     session: AsyncSession = Depends(get_db),

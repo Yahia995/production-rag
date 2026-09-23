@@ -1,8 +1,9 @@
-import pytest
 from uuid import uuid4
 
-from app.retrieval.base import RetrievedChunk
+import pytest
+
 from app.reranking.base import Reranker
+from app.retrieval.base import RetrievedChunk
 
 
 def test_reranker_is_abstract() -> None:

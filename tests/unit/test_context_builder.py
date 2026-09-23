@@ -1,7 +1,7 @@
 from uuid import uuid4
 
-from app.retrieval.base import RetrievedChunk
 from app.rag.context import ContextBuilder
+from app.retrieval.base import RetrievedChunk
 
 
 def _chunk(content: str, chunk_id=None, score: float = 1.0) -> RetrievedChunk:

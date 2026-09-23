@@ -1,7 +1,7 @@
 from sentence_transformers import CrossEncoder
 
-from app.retrieval.base import RetrievedChunk
 from app.reranking.base import Reranker
+from app.retrieval.base import RetrievedChunk
 
 
 class CrossEncoderReranker(Reranker):

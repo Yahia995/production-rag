@@ -1,7 +1,6 @@
-from uuid import uuid4
-
 import pytest
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 
 from app.db.models.documents import Document, DocumentVersion
 
@@ -54,8 +53,6 @@ async def test_document_version_cascade_delete(db_session) -> None:
 
 
 async def test_document_requires_source(db_session) -> None:
-    from sqlalchemy.exc import IntegrityError
-
     document = Document(
         source=None,
         title="Asyncio",

@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from uuid import uuid4
 
 import pytest
@@ -30,7 +30,7 @@ def _document(
             collection="default",
         ),
         content_hash="abc123",
-        parsed_at=datetime.now(timezone.utc),
+        parsed_at=datetime.now(UTC),
         segments=(
             ParsedSegment(
                 content=content,
@@ -234,7 +234,7 @@ def test_multiple_segments_preserve_document_order() -> None:
             collection="default",
         ),
         content_hash="abc123",
-        parsed_at=datetime.now(timezone.utc),
+        parsed_at=datetime.now(UTC),
         segments=(
             ParsedSegment(
                 content="First page",

@@ -1,7 +1,7 @@
 import pytest
 import redis
 from qdrant_client import QdrantClient
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from app.db.models.base import Base
 

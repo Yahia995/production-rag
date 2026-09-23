@@ -1,8 +1,8 @@
 from unittest.mock import MagicMock
 from uuid import uuid4
 
-from app.retrieval.base import RetrievedChunk
 from app.reranking.cross_encoder import CrossEncoderReranker
+from app.retrieval.base import RetrievedChunk
 
 
 def _chunk(content: str) -> RetrievedChunk:

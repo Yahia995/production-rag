@@ -1,8 +1,8 @@
 from pathlib import Path
 from unittest.mock import MagicMock
 
-from app.documents.service import DocumentIngestionService
 from app.db.qdrant import VectorRecord
+from app.documents.service import DocumentIngestionService
 from app.generation.base import GenerationResult
 from app.rag.pipeline import RagPipeline
 from app.reranking.base import Reranker
