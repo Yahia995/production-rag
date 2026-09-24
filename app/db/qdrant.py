@@ -70,12 +70,12 @@ class QdrantVectorStore:
 
         self.client.upsert(collection_name=self.collection_name, points=points)
 
-    def retrieve(
+    def search(
         self,
-        query: str,
+        vector: list[float],
         top_k: int = 10,
         filters: dict[str, str] | None = None,
-    ) -> tuple[RetrievedChunk, ...]:
+    ) -> list[dict[str, object]]:
         query_filter = self._build_filter(filters)
 
         results = self.client.query_points(

@@ -15,9 +15,8 @@ from app.query.transformer import ConversationTurn, QueryTransformer
 from app.rag.citation import Citation, extract_citations
 from app.rag.context import ContextBuilder
 from app.reranking.base import Reranker
-from app.retrieval.base import Retriever
+from app.retrieval.base import RetrievedChunk, Retriever
 from app.retrieval.fusion import reciprocal_rank_fusion
-from app.retrieval.base import RetrievedChunk
 
 _ANSWER_SYSTEM_PROMPT = (
     "Answer the question using only the numbered context below. Cite sources "
