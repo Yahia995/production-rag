@@ -60,3 +60,7 @@ extend-immutable-calls = ["fastapi.Depends", "fastapi.params.Depends"]
 [tool.mypy]
 python_version = "3.11"
 strict = true
+
+[[tool.mypy.overrides]]
+module = "rank_bm25.*"
+ignore_missing_imports = true

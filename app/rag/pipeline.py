@@ -10,13 +10,14 @@ from app.core.metrics import (
     retrieval_results_count,
 )
 from app.core.tracing import get_tracer
-from app.generation.base import LLMProvider
+from app.generation.base import GenerationResult, LLMProvider
 from app.query.transformer import ConversationTurn, QueryTransformer
 from app.rag.citation import Citation, extract_citations
 from app.rag.context import ContextBuilder
 from app.reranking.base import Reranker
 from app.retrieval.base import Retriever
 from app.retrieval.fusion import reciprocal_rank_fusion
+from app.retrieval.base import RetrievedChunk
 
 _ANSWER_SYSTEM_PROMPT = (
     "Answer the question using only the numbered context below. Cite sources "
@@ -86,7 +87,7 @@ class RagPipeline:
         self,
         search_query: str,
         filters: dict[str, str] | None,
-    ) -> tuple:
+    ) -> tuple[RetrievedChunk, ...]:
         with _tracer.start_as_current_span("rag.retrieve"):
             start = time.perf_counter()
 
@@ -104,7 +105,7 @@ class RagPipeline:
 
             return fused
 
-    def _rerank(self, search_query: str, fused: tuple) -> tuple:
+    def _rerank(self, search_query: str, fused: tuple) -> tuple[RetrievedChunk, ...]:
         with _tracer.start_as_current_span("rag.rerank"):
             start = time.perf_counter()
 
@@ -116,7 +117,7 @@ class RagPipeline:
 
             return reranked
 
-    def _generate(self, prompt: str):
+    def _generate(self, prompt: str) -> GenerationResult:
         with _tracer.start_as_current_span("rag.generate"):
             start = time.perf_counter()
 

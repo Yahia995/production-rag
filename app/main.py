@@ -3,10 +3,10 @@ import logging
 from fastapi import FastAPI
 from prometheus_client import make_asgi_app
 
-import app.core.metrics  # noqa: F401
 from app.api.routes.chat import router as chat_router
 from app.api.routes.documents import router as documents_router
 from app.api.routes.health import router as health_router
+from app.core import metrics as _metrics  # noqa: F401
 from app.core.config import get_settings
 from app.core.logging import configure_logging
 from app.core.tracing import configure_tracing

@@ -1,5 +1,6 @@
 import json
 from dataclasses import asdict, dataclass
+from typing import cast
 
 import redis
 
@@ -21,7 +22,9 @@ class RedisJobQueue:
     def __init__(self, client: redis.Redis | None = None) -> None:
         settings = get_settings()
 
-        self.client = client or redis.from_url(settings.redis_url)
+        self.client: redis.Redis = client or cast(
+            redis.Redis, redis.from_url(settings.redis_url)
+        )
 
     def enqueue(self, message: IngestionJobMessage) -> None:
         self.client.rpush(_INGESTION_QUEUE_KEY, json.dumps(asdict(message)))
@@ -32,9 +35,9 @@ class RedisJobQueue:
         if result is None:
             return None
 
-        _, payload = result
+        _, payload = cast(tuple[bytes, bytes], result)
 
         return IngestionJobMessage(**json.loads(payload))
 
     def queue_length(self) -> int:
-        return self.client.llen(_INGESTION_QUEUE_KEY)
+        return cast(int, self.client.llen(_INGESTION_QUEUE_KEY))
